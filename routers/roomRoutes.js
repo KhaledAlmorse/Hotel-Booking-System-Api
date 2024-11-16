@@ -10,6 +10,8 @@ const {
   setHotelIdToBody,
 } = require("../services/roomServices");
 
+const AuthServices = require("../services/authServices");
+
 const {
   getRoomValidator,
   createRoomValidator,
@@ -21,7 +23,14 @@ const router = express.Router({ mergeParams: true });
 
 router
   .route("/")
-  .post(setHotelIdToBody, createRoomValidator, createRoom)
+  .post(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin"),
+    setHotelIdToBody,
+    createRoomValidator,
+
+    createRoom
+  )
   .get(getRooms);
 
 router

@@ -54,7 +54,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
   }
   //trigger "save" event when update doucment
   document.save();
-  res.status(200).json({ status: "Sucsess", data: document });
+  return res.status(200).json({ status: "Sucsess", data: document });
 });
 
 exports.changeUserPassword = asyncHandler(async (req, res, next) => {
@@ -64,6 +64,7 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     id,
     {
       password: await bcrypt.hash(req.body.password, 12),
+      passwordChangeAt: Date.now(),
     },
     { new: true }
   );
@@ -72,7 +73,7 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   }
   //trigger "save" event when update doucment
   document.save();
-  res.status(200).json({ status: "Sucsess", data: document });
+  return res.status(200).json({ status: "Sucsess", data: document });
 });
 
 /**

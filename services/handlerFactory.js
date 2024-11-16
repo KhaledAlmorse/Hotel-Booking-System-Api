@@ -1,76 +1,80 @@
-const asyncHandler = require("express-async-handlr");
-
 const ApiError = require("../utils/apiError");
 const ApiFeatures = require("../utils/apiFeatures");
 
-exports.deleteOne = (Model) =>
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
+exports.deleteOne = (Model) => (req, res, next) => {
+  const { id } = req.params;
 
-    const document = await Model.findByIdAndDelete(id);
-    if (!document) {
-      return next(new ApiError(`No document found for this id: ${id}`, 404));
-    }
-    res.status(200).json({ status: "Success" });
-  });
+  Model.findByIdAndDelete(id)
+    .then((document) => {
+      if (!document) {
+        return next(new ApiError(`No document found for this id: ${id}`, 404));
+      }
+      res.status(200).json({ status: "Success" });
+    })
+    .catch((error) => next(error));
+};
 
-exports.updateOne = (Model) =>
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
+exports.updateOne = (Model) => (req, res, next) => {
+  const { id } = req.params;
 
-    const document = await Model.findByIdAndUpdate(id, req.body, { new: true });
-    if (!document) {
-      return next(new ApiError(`No document for this id :${id}`, 404));
-    }
-    //trigger "save" event when update doucment
-    document.save();
-    res.status(200).json({ status: "Sucsess", data: document });
-  });
+  Model.findByIdAndUpdate(id, req.body, { new: true })
+    .then((document) => {
+      if (!document) {
+        return next(new ApiError(`No document for this id :${id}`, 404));
+      }
+      // Trigger "save" event when updating the document
+      return document.save().then(() => {
+        res.status(200).json({ status: "Success", data: document });
+      });
+    })
+    .catch((error) => next(error));
+};
 
-exports.getOne = (Model, populationOpts) =>
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    //1-Bulid query
-    let query = Model.findById(id);
-    if (populationOpts) {
-      query = query.populate(populationOpts);
-    }
-    //2-execute query
-    const document = await query;
+exports.getOne = (Model, populationOpts) => (req, res, next) => {
+  const { id } = req.params;
 
-    if (!document) {
-      return next(new ApiError(`No document for this id ${id}`, 404));
-    }
-    res.status(200).json({ data: document });
-  });
+  let query = Model.findById(id);
+  if (populationOpts) {
+    query = query.populate(populationOpts);
+  }
 
-exports.CreateOne = (Model) =>
-  asyncHandler(async (req, res) => {
-    const document = await Model.create(req.body);
+  query
+    .then((document) => {
+      if (!document) {
+        return next(new ApiError(`No document for this id ${id}`, 404));
+      }
+      res.status(200).json({ data: document });
+    })
+    .catch((error) => next(error));
+};
 
-    res.status(201).json({ status: "Succsess", data: document });
-  });
+exports.CreateOne = (Model) => (req, res, next) => {
+  Model.create(req.body)
+    .then((document) => {
+      res.status(201).json({ status: "Success", data: document });
+    })
+    .catch((error) => next(error));
+};
 
-exports.getAll = (Model) =>
-  asyncHandler(async (req, res) => {
-    let filter = {};
-    if (req.filterObj) {
-      filter = req.filterObj;
-    }
-    //Build Query
-    const documentsCount = await Model.countDocuments();
-    const apiFeatures = new ApiFeatures(Model.find(filter), req.query)
-      .paginate(documentsCount)
-      .filter()
-      .limitField()
-      .search()
-      .sort();
+exports.getAll = (Model) => (req, res, next) => {
+  const filter = req.filterObj || {};
 
-    //Execte Query
-    const { mongooseQuery, paginSationResult } = apiFeatures;
-    const document = await mongooseQuery;
+  Model.countDocuments(filter)
+    .then((documentsCount) => {
+      const apiFeatures = new ApiFeatures(Model.find(filter), req.query)
+        .paginate(documentsCount)
+        .filter()
+        .limitField()
+        .search()
+        .sort();
 
-    res
-      .status(200)
-      .json({ results: document.length, paginSationResult, data: document });
-  });
+      return apiFeatures.mongooseQuery.then((document) => {
+        res.status(200).json({
+          results: document.length,
+          paginationResult: apiFeatures.paginSationResult,
+          data: document,
+        });
+      });
+    })
+    .catch((error) => next(error));
+};

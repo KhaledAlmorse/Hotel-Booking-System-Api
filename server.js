@@ -7,11 +7,13 @@ const dbConnection = require("./config/dbConnection");
 const ApiError = require("./utils/apiError");
 const globalError = require("./Middlware/errorMiddlware");
 
+//Routes
 const userRoutes = require("./routers/userRoutes");
 const hotelRoutes = require("./routers/hotelRoutes");
 const roomRoutes = require("./routers/roomRoutes");
 const bookingRoutes = require("./routers/bookingRoutes");
 const reviewRoutes = require("./routers/reviewRoutes");
+const authRoutes = require("./routers/authRoutes");
 
 //Connection with db
 dbConnection();
@@ -32,24 +34,32 @@ app.use("/api/v1/hotels", hotelRoutes);
 app.use("/api/v1/rooms", roomRoutes);
 app.use("/api/v1/booking", bookingRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/auth", authRoutes);
 
-// app.all("*", (req, res, next) => {
-//   next(new ApiError(`Can't find this route:${req.originalUrl}`, 404));
-// });
-
-//Global error handling middlware
-app.use(globalError);
-
-const port = process.env.PORT || 7000;
-const server = app.listen(port, () => {
-  console.log(`App Running on Port ${port}`);
+app.all("*", (req, res, next) => {
+  next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));
 });
 
-//OutSide Express
+// app.use((req, res, next) => {
+//   return return res.status(404).json({
+//     error: "Route not found",
+//     path: req.originalUrl,
+//   });
+// });
+
+// Global error handling middleware for express
+app.use(globalError);
+
+const PORT = process.env.PORT || 8000;
+const server = app.listen(PORT, () => {
+  console.log(`App running running on port ${PORT}`);
+});
+
+// Handle rejection outside express
 process.on("unhandledRejection", (err) => {
-  console.error(`unhandledRejection Error :${err.name} | ${err.message}`);
+  console.error(`UnhandledRejection Errors: ${err.name} | ${err.message}`);
   server.close(() => {
-    console.log("Shutting down...");
+    console.error(`Shutting down....`);
     process.exit(1);
   });
 });

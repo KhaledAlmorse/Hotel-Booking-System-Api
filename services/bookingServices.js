@@ -68,7 +68,7 @@ exports.createUserBooking = asyncHandler(async (req, res, next) => {
   });
   booking.save();
 
-  res.status(201).json({ data: booking });
+  return res.status(201).json({ data: booking });
 });
 
 // Confirm Booking
@@ -84,7 +84,7 @@ exports.confirmBooking = asyncHandler(async (req, res, next) => {
 
   booking.status = "confirmed";
   booking.save();
-  res.status(200).json({ status: "Confirmed", data: booking });
+  return res.status(200).json({ status: "Confirmed", data: booking });
 });
 
 // Cancel Booking
@@ -100,7 +100,7 @@ exports.cancledBooking = asyncHandler(async (req, res, next) => {
 
   booking.status = "cancled";
   booking.save();
-  res.status(200).json({ status: "Cancled", data: booking });
+  return res.status(200).json({ status: "Cancled", data: booking });
 });
 
 // Get Available Rooms
@@ -136,7 +136,7 @@ exports.getAvailableUserRooms = asyncHandler(async (req, res, next) => {
   });
   //This query finds all rooms in the Room collection where the _id is not in the unavailableRooms list.
 
-  res.status(200).json({ data: availableRooms });
+  return res.status(200).json({ data: availableRooms });
 });
 
 // Get All Bookings
