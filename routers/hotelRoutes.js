@@ -1,5 +1,7 @@
 const express = require("express");
 
+const AuthServices = require("../services/authServices");
+
 const {
   createHotel,
   getHotels,
@@ -23,12 +25,41 @@ const router = express.Router();
 router.use("/:hotelId/rooms", roomRoutes);
 router.use("/:hotelId/reviews", reviewRoutes);
 
-router.route("/").post(createHotelValidator, createHotel).get(getHotels);
+router.use(AuthServices.protect, AuthServices.allowedTo("user"));
+
+router
+  .route("/")
+  .post(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin"),
+    createHotelValidator,
+    createHotel
+  )
+  .get(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin", "user"),
+    getHotels
+  );
 
 router
   .route("/:id")
-  .get(getHotelValidator, getHotel)
-  .put(updateHotelValidator, updateHotel)
-  .delete(deleteHotelValidator, deleteHotel);
+  .get(
+    AuthServices.protect,
+    AuthServices.allowedTo("user", "admin"),
+    getHotelValidator,
+    getHotel
+  )
+  .put(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin"),
+    updateHotelValidator,
+    updateHotel
+  )
+  .delete(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin"),
+    deleteHotelValidator,
+    deleteHotel
+  );
 
 module.exports = router;

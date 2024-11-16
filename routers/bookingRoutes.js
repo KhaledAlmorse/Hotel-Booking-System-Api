@@ -1,5 +1,7 @@
 const express = require("express");
 
+const AuthServices = require("../services/authServices");
+
 const {
   createUserBooking,
   getAllBooking,
@@ -24,17 +26,61 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(createBookingValidator, createUserBooking)
-  .get(getAllBooking);
+  .post(
+    AuthServices.protect,
+    AuthServices.allowedTo("user"),
+    createBookingValidator,
+    createUserBooking
+  )
+  .get(
+    AuthServices.protect,
+    AuthServices.allowedTo("user", "admin"),
+    getAllBooking
+  );
 
 router
   .route("/:id")
-  .get(getBookingValidator, getSpecificBooking)
-  .put(updateBookingValidator, updateSpecificBooking)
-  .delete(deleteBookingValidator, deleteSpecificBooking);
+  .get(
+    AuthServices.protect,
+    AuthServices.allowedTo("user", "admin"),
+    getBookingValidator,
+    getSpecificBooking
+  )
+  .put(
+    AuthServices.protect,
+    AuthServices.allowedTo("user", "admin"),
+    updateBookingValidator,
+    updateSpecificBooking
+  )
+  .delete(
+    AuthServices.protect,
+    AuthServices.allowedTo("user", "admin"),
+    deleteBookingValidator,
+    deleteSpecificBooking
+  );
 
-router.route("/confirm/:id").put(confirmBookingValidator, confirmBooking);
-router.route("/cancled/:id").put(cancledBookingValidator, cancledBooking);
-router.get("/rooms/available", getAvailableUserRooms);
+router
+  .route("/confirm/:id")
+  .put(
+    AuthServices.protect,
+    AuthServices.allowedTo("user"),
+    confirmBookingValidator,
+    confirmBooking
+  );
+router
+  .route("/cancled/:id")
+  .put(
+    AuthServices.protect,
+    AuthServices.allowedTo("user"),
+    cancledBookingValidator,
+    cancledBooking
+  );
+router
+  .route("/rooms/available")
+  .get(
+    AuthServices.protect,
+    AuthServices.allowedTo("user"),
+    getAvailableUserRooms
+  );
 
 module.exports = router;

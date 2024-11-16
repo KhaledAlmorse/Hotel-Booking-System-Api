@@ -28,15 +28,30 @@ router
     AuthServices.allowedTo("admin"),
     setHotelIdToBody,
     createRoomValidator,
-
     createRoom
   )
-  .get(getRooms);
+  .get(AuthServices.protect, AuthServices.allowedTo("admin", "user"), getRooms);
 
 router
   .route("/:id")
-  .get(createFilterObj, getRoomValidator, getRoom)
-  .put(updateRoomValidator, updateRoom)
-  .delete(deleteRoomValidator, deleteRoom);
+  .get(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin", "user"),
+    createFilterObj,
+    getRoomValidator,
+    getRoom
+  )
+  .put(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin"),
+    updateRoomValidator,
+    updateRoom
+  )
+  .delete(
+    AuthServices.protect,
+    AuthServices.allowedTo("admin"),
+    deleteRoomValidator,
+    deleteRoom
+  );
 
 module.exports = router;

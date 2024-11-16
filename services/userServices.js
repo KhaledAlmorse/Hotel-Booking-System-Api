@@ -35,10 +35,10 @@ exports.getUser = factory.getOne(User);
  * @private admin
  */
 
-exports.updateUser = asyncHandler(async (req, res, next) => {
+exports.updateUser = (req, res, next) => {
   const { id } = req.params;
 
-  const document = await User.findByIdAndUpdate(
+  User.findByIdAndUpdate(
     id,
     {
       name: req.body.name,
@@ -48,33 +48,48 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
       role: req.body.role,
     },
     { new: true }
-  );
-  if (!document) {
-    return next(new ApiError(`No document for this id :${id}`, 404));
-  }
-  //trigger "save" event when update doucment
-  document.save();
-  return res.status(200).json({ status: "Sucsess", data: document });
-});
+  )
+    .then((document) => {
+      if (!document) {
+        return next(new ApiError(`No document for this id :${id}`, 404));
+      }
+      // Trigger "save" event when updating the document
+      document
+        .save()
+        .then(() => {
+          res.status(200).json({ status: "Success", data: document });
+        })
+        .catch((err) => next(err)); // Handle save error
+    })
+    .catch((err) => next(err)); // Handle findByIdAndUpdate error
+};
 
-exports.changeUserPassword = asyncHandler(async (req, res, next) => {
+exports.changeUserPassword = (req, res, next) => {
   const { id } = req.params;
 
-  const document = await User.findByIdAndUpdate(
-    id,
-    {
-      password: await bcrypt.hash(req.body.password, 12),
-      passwordChangeAt: Date.now(),
-    },
-    { new: true }
-  );
-  if (!document) {
-    return next(new ApiError(`No document for this id :${id}`, 404));
-  }
-  //trigger "save" event when update doucment
-  document.save();
-  return res.status(200).json({ status: "Sucsess", data: document });
-});
+  bcrypt
+    .hash(req.body.password, 12)
+    .then((hashedPassword) => {
+      return User.findByIdAndUpdate(
+        id,
+        {
+          password: hashedPassword,
+          passwordChangeAt: Date.now(),
+        },
+        { new: true }
+      );
+    })
+    .then((document) => {
+      if (!document) {
+        return next(new ApiError(`No document for this id :${id}`, 404));
+      }
+      // Trigger "save" event when updating the document
+      return document.save().then(() => {
+        res.status(200).json({ status: "Success", data: document });
+      });
+    })
+    .catch((err) => next(err)); // Handle errors
+};
 
 /**
  * @description Delete Specific  User

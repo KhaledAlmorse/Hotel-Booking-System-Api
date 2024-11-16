@@ -1,5 +1,7 @@
 const express = require("express");
 
+const AuthServices = require("../services/authServices");
+
 const {
   createUser,
   getUsers,
@@ -18,6 +20,8 @@ const {
 } = require("../utils/validator/userValidator");
 
 const router = express.Router();
+
+router.use(AuthServices.protect, AuthServices.allowedTo("admin"));
 
 router.route("/").get(getUsers).post(createUserValidator, createUser);
 

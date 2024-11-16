@@ -1,5 +1,7 @@
 const express = require("express");
 
+const AuthServices = require("../services/authServices");
+
 const {
   createReview,
   getReviews,
@@ -18,6 +20,8 @@ const {
 } = require("../utils/validator/reviewValidator");
 
 const router = express.Router({ mergeParams: true });
+
+router.use(AuthServices.protect, AuthServices.allowedTo("user"));
 
 router
   .route("/")
