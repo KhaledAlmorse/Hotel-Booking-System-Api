@@ -30,9 +30,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    passwordChangeAt: {
-      type: Date,
-    },
+    passwordChangeAt: Date,
+    passwordResetCode: String,
+    passwordResetExpires: Date,
+    passwordResetverified: Boolean,
   },
   { timestamps: true }
 );
